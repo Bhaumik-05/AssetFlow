@@ -53,6 +53,7 @@ class NotificationViewSet(
             status=status.HTTP_200_OK,
         )
 
+from .permissions import IsAdmin
 
 class ActivityLogViewSet(
     mixins.ListModelMixin,
@@ -60,7 +61,7 @@ class ActivityLogViewSet(
     viewsets.GenericViewSet,
 ):
     serializer_class = ActivityLogSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdmin]
 
     queryset = (
         ActivityLog.objects

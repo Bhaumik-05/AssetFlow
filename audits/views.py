@@ -1,6 +1,8 @@
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from core.models import ActivityLog
+from core.service import log_activity
 
 from .models import AuditCycle, AuditRecord
 from .permissions import (
@@ -111,6 +113,14 @@ class AuditCycleViewSet(
 
         result = AuditService.complete_audit(
             audit_cycle
+        )
+
+        log_activity(
+            employee=request.user,
+            module=ActivityLog.Module.AUDIT,
+            action="Completed Audit",
+            object_id=audit_cycle.id,
+            ip_address=request.META.get("REMOTE_ADDR"),
         )
 
         return Response(

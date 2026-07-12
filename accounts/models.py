@@ -36,6 +36,10 @@ class Department(models.Model):
         auto_now=True
     )
 
+    is_active = models.BooleanField(
+        default=True
+    )
+
     class Meta:
         ordering = ["name"]
         verbose_name = "Department"

@@ -13,7 +13,6 @@ class DashboardService:
 
     @staticmethod
     def admin_dashboard():
-
         return {
             "total_assets": Asset.objects.count(),
 
@@ -33,14 +32,15 @@ class DashboardService:
                 is_active=True
             ).count(),
 
-            "active_audits": AuditCycle.objects.count(),
+            # Only currently running audits
+            "active_audits": AuditCycle.objects.filter(
+                status=AuditCycle.Status.IN_PROGRESS
+            ).count(),
         }
 
     @staticmethod
     def asset_manager_dashboard():
-
         return {
-
             "available_assets": Asset.objects.filter(
                 status=Asset.Status.AVAILABLE
             ).count(),
@@ -60,11 +60,9 @@ class DashboardService:
 
     @staticmethod
     def hod_dashboard(user):
-
         department = user.department
 
         return {
-
             "department_assets": Asset.objects.filter(
                 department=department
             ).count(),
@@ -87,16 +85,17 @@ class DashboardService:
 
     @staticmethod
     def employee_dashboard(user):
-
         return {
-
             "my_assets": AssetAllocation.objects.filter(
                 employee=user,
                 status=AssetAllocation.Status.ACTIVE
             ).count(),
 
+            # Count only active bookings
             "my_bookings": ResourceBooking.objects.filter(
                 employee=user
+            ).exclude(
+                status=ResourceBooking.Status.CANCELLED
             ).count(),
 
             "my_maintenance_requests": MaintenanceRequest.objects.filter(

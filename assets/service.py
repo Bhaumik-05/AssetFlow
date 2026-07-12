@@ -512,7 +512,7 @@ class AllocationService:
             )
         )
     
- import re
+import re
 from decimal import Decimal
 from datetime import date
 

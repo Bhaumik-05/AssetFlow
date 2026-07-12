@@ -45,7 +45,12 @@ class Asset(models.Model):
         related_name="assets"
     )
 
-    serial_number = models.CharField(max_length=100, unique=True)
+    serial_number = models.CharField(
+    max_length=100,
+    unique=True,
+    null=True,
+    blank=True
+)
 
     manufacturer = models.CharField(max_length=100)
     model = models.CharField(max_length=100)
@@ -165,6 +170,13 @@ class AssetTransfer(models.Model):
         related_name="transfers"
     )
 
+    allocation = models.ForeignKey(
+    AssetAllocation,
+    on_delete=models.PROTECT,
+    related_name="transfers",
+    null=True,
+    blank=True,
+)
     from_department = models.ForeignKey(
         Department,
         on_delete=models.PROTECT,
@@ -217,6 +229,11 @@ class AssetTransfer(models.Model):
 
     request_date = models.DateTimeField(auto_now_add=True)
 
+    completed_date = models.DateTimeField(
+    null=True,
+    blank=True
+)
+
     approved_date = models.DateTimeField(
         null=True,
         blank=True
@@ -235,6 +252,7 @@ class ResourceBooking(models.Model):
         PENDING = "PENDING", "Pending"
         APPROVED = "APPROVED", "Approved"
         CANCELLED = "CANCELLED", "Cancelled"
+        COMPLETED = "COMPLETED", "Completed"
 
     asset = models.ForeignKey(
         Asset,
@@ -281,6 +299,7 @@ class MaintenanceRequest(models.Model):
         APPROVED = "APPROVED", "Approved"
         IN_PROGRESS = "IN_PROGRESS", "In Progress"
         RESOLVED = "RESOLVED", "Resolved"
+        REJECTED = "REJECTED", "Rejected"
 
     asset = models.ForeignKey(
         Asset,

@@ -4,7 +4,7 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenBlacklistView,
 )
-
+from .views import ReportAPIView
 from .views import CustomTokenObtainPairView
 from .views import DashboardAPIView
 
@@ -32,5 +32,11 @@ urlpatterns = [
         "dashboard/",
         DashboardAPIView.as_view(),
         name="dashboard",
+    ),
+
+    path(
+        "reports/<str:report_type>/",
+        ReportAPIView.as_view(),
+        name="reports",
     ),
 ]

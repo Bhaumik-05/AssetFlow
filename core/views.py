@@ -1,5 +1,5 @@
 from django.shortcuts import render
-
+from .report_service import ReportService
 # Create your views here.
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
@@ -103,3 +103,66 @@ class DashboardAPIView(APIView):
             data = DashboardService.employee_dashboard(user)
 
         return Response(data)
+
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+
+from .permissions import IsAdminOrAssetManager
+from .report_service import ReportService
+
+
+class ReportAPIView(APIView):
+    """
+    APIs for system reports.
+
+    GET /reports/assets/
+    GET /reports/departments/
+    GET /reports/maintenance/
+    GET /reports/bookings/
+    GET /reports/transfers/
+    GET /reports/audits/
+    """
+
+    permission_classes = [
+        IsAuthenticated,
+        IsAdminOrAssetManager
+    ]
+
+    def get(self, request, report_type):
+
+        reports = {
+
+            "assets":
+                ReportService.asset_utilization,
+
+            "departments":
+                ReportService.department_asset_report,
+
+            "maintenance":
+                ReportService.maintenance_statistics,
+
+            "bookings":
+                ReportService.booking_statistics,
+
+            "transfers":
+                ReportService.transfer_statistics,
+
+            "audits":
+                ReportService.audit_statistics,
+        }
+
+        report = reports.get(report_type)
+
+        if report is None:
+
+            return Response(
+                {
+                    "error": "Invalid report type."
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        return Response(
+            report(),
+            status=status.HTTP_200_OK
+        )

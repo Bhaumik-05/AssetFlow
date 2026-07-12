@@ -44,7 +44,7 @@ class Department(models.Model):
     def __str__(self):
         return self.name
 
-
+from .managers import EmployeeManager
 class Employee(AbstractUser):
 
     class Role(models.TextChoices):
@@ -89,6 +89,7 @@ class Employee(AbstractUser):
         "last_name",
         "employee_id"
     ]
+    objects = EmployeeManager()
 
     class Meta:
         ordering = ["first_name", "last_name"]

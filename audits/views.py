@@ -1,11 +1,12 @@
-from django.shortcuts import get_object_or_404
-
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import AuditCycle, AuditRecord
+from .permissions import (
+    IsAuditManager,
+    IsAuditViewer,
+)
 from .serializers import (
     AuditCycleSerializer,
     AuditRecordSerializer,
@@ -24,12 +25,40 @@ class AuditCycleViewSet(
     """
 
     serializer_class = AuditCycleSerializer
-    permission_classes = [IsAuthenticated]
 
-    queryset = AuditCycle.objects.select_related(
-        "department",
-        "conducted_by"
-    ).order_by("-start_date")
+    queryset = (
+        AuditCycle.objects
+        .select_related(
+            "department",
+            "conducted_by",
+        )
+        .order_by("-start_date")
+    )
+
+    def get_permissions(self):
+        """
+        Role Based Permissions
+
+        View Audit      -> Admin, Asset Manager, HOD
+        Create Audit    -> Admin, Asset Manager
+        Start Audit     -> Admin, Asset Manager
+        Complete Audit  -> Admin, Asset Manager
+        Report          -> Admin, Asset Manager, HOD
+        """
+
+        if self.action in [
+            "list",
+            "retrieve",
+            "report",
+        ]:
+            permission_classes = [IsAuditViewer]
+        else:
+            permission_classes = [IsAuditManager]
+
+        return [
+            permission()
+            for permission in permission_classes
+        ]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -58,7 +87,10 @@ class AuditCycleViewSet(
             audit_cycle
         )
 
-        return Response(result)
+        return Response(
+            result,
+            status=status.HTTP_200_OK,
+        )
 
     @action(detail=True, methods=["post"])
     def identify_missing(self, request, pk=None):
@@ -68,7 +100,10 @@ class AuditCycleViewSet(
             audit_cycle
         )
 
-        return Response(result)
+        return Response(
+            result,
+            status=status.HTTP_200_OK,
+        )
 
     @action(detail=True, methods=["post"])
     def complete(self, request, pk=None):
@@ -78,7 +113,10 @@ class AuditCycleViewSet(
             audit_cycle
         )
 
-        return Response(result)
+        return Response(
+            result,
+            status=status.HTTP_200_OK,
+        )
 
     @action(detail=True, methods=["get"])
     def report(self, request, pk=None):
@@ -88,7 +126,10 @@ class AuditCycleViewSet(
             audit_cycle
         )
 
-        return Response(report)
+        return Response(
+            report,
+            status=status.HTTP_200_OK,
+        )
 
 
 class AuditRecordViewSet(
@@ -101,13 +142,37 @@ class AuditRecordViewSet(
     """
 
     serializer_class = AuditRecordSerializer
-    permission_classes = [IsAuthenticated]
 
-    queryset = AuditRecord.objects.select_related(
-        "audit_cycle",
-        "asset",
-        "verified_by",
-    ).order_by("-verified_on")
+    queryset = (
+        AuditRecord.objects
+        .select_related(
+            "audit_cycle",
+            "asset",
+            "verified_by",
+        )
+        .order_by("-verified_on")
+    )
+
+    def get_permissions(self):
+        """
+        Role Based Permissions
+
+        View Records   -> Admin, Asset Manager, HOD
+        Verify Asset   -> Admin, Asset Manager
+        """
+
+        if self.action in [
+            "list",
+            "retrieve",
+        ]:
+            permission_classes = [IsAuditViewer]
+        else:
+            permission_classes = [IsAuditManager]
+
+        return [
+            permission()
+            for permission in permission_classes
+        ]
 
     @action(detail=True, methods=["post"])
     def verify(self, request, pk=None):
@@ -121,4 +186,7 @@ class AuditRecordViewSet(
             remarks=request.data.get("remarks", ""),
         )
 
-        return Response(result)
+        return Response(
+            result,
+            status=status.HTTP_200_OK,
+        )

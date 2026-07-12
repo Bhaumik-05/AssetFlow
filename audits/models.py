@@ -90,6 +90,8 @@ class AuditRecord(models.Model):
 
     remarks = models.TextField(blank=True)
 
+    is_verified = models.BooleanField(default=False)
+
     verified_on = models.DateTimeField(auto_now_add=True)
 
     created_at = models.DateTimeField(auto_now_add=True)

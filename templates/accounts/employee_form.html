@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Employee Form | AssetFlow{% endblock %}
+{% block content %}
+  <div class="card">
+    <h2>Employee Form</h2>
+    <form class="form-grid">
+      <label>First Name<input type="text"></label>
+      <label>Last Name<input type="text"></label>
+      <label>Email<input type="email"></label>
+      <label>Phone<input type="text"></label>
+      <label>Employee ID<input type="text"></label>
+      <label>Role<select><option>EMPLOYEE</option><option>HOD</option><option>ASSET_MANAGER</option><option>ADMIN</option></select></label>
+      <label>Department<select><option>Choose department</option></select></label>
+      <label>Password<input type="password"></label>
+      <div class="auth-actions"><button class="btn primary" type="submit">Save</button></div>
+    </form>
+  </div>
+{% endblock %}

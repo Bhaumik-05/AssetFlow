@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}AssetFlow{% endblock %}</title>
+    {% load static %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+  </head>
+ <body>
+
+{% if request.path != '/app/login/' %}
+
+<div class="app-shell">
+    {% include "includes/sidebar.html" %}
+
+    <div class="main-panel">
+        {% include "includes/navbar.html" %}
+
+        <main class="content">
+            {% include "includes/messages.html" %}
+            {% include "includes/breadcrumbs.html" %}
+
+{% endif %}
+
+{% block content %}{% endblock %}
+
+{% if request.path != '/app/login/' %}
+
+        </main>
+
+        {% include "includes/footer.html" %}
+    </div>
+</div>
+
+{% endif %}
+
+<script src="{% static 'js/app.js' %}"></script>
+
+</body>
+</html>

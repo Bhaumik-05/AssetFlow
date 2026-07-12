@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Transfers | AssetFlow{% endblock %}
+{% block content %}
+  <div class="card">
+    <h2>Asset Transfers</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Asset</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Status</th>
+            <th>Requested By</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for transfer in transfers %}
+            <tr>
+              <td>{{ transfer.asset.asset_code }}</td>
+              <td>{{ transfer.from_department }}</td>
+              <td>{{ transfer.to_department }}</td>
+              <td><span class="badge warning">{{ transfer.status }}</span></td>
+              <td>{{ transfer.requested_by }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5">No transfers found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

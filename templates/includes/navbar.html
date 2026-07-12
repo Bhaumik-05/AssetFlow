@@ -1,0 +1,14 @@
+{% load static %}
+<header class="topbar">
+  <button class="icon-button" id="sidebarToggle" type="button">☰</button>
+  <div class="topbar-search">
+    <input type="text" placeholder="Search" />
+  </div>
+  <div class="topbar-actions">
+    <a class="icon-button" href="{% url 'notifications' %}">🔔</a>
+    <div class="profile-pill">
+      <span>{{ user.get_full_name|default:user.email }}</span>
+      <small>{{ user.role }}</small>
+    </div>
+  </div>
+</header>

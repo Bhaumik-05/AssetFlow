@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Assets | AssetFlow{% endblock %}
+{% block content %}
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h2>Assets</h2>
+      <a class="btn primary" href="#">New Asset</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Asset Code</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Status</th>
+            <th>Department</th>
+            <th>Location</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for asset in assets %}
+            <tr>
+              <td>{{ asset.asset_code }}</td>
+              <td>{{ asset.name }}</td>
+              <td>{{ asset.category.name }}</td>
+              <td><span class="badge info">{{ asset.status }}</span></td>
+              <td>{{ asset.department|default:'-' }}</td>
+              <td>{{ asset.location }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6">No assets found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

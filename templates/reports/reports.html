@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Reports | AssetFlow{% endblock %}
+{% block content %}
+  <div class="card">
+    <h2>Reports</h2>
+    <div class="grid grid-2">
+      <div class="card">
+        <h3>Asset Utilization</h3>
+        <p>Total assets: {{ report_data.total_assets|default:'-' }}</p>
+        <p>Available: {{ report_data.available_assets|default:'-' }}</p>
+        <p>Allocated: {{ report_data.allocated_assets|default:'-' }}</p>
+      </div>
+      <div class="card">
+        <h3>Maintenance Statistics</h3>
+        <p>Total requests: {{ report_data.total_requests|default:'-' }}</p>
+        <p>Pending: {{ report_data.pending|default:'-' }}</p>
+        <p>Resolved: {{ report_data.resolved|default:'-' }}</p>
+      </div>
+    </div>
+  </div>
+{% endblock %}

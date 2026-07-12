@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Login | AssetFlow{% endblock %}
+{% block content %}
+  <div class="login-card">
+    <h2>Sign in to AssetFlow</h2>
+    <p>Access your dashboard, assets, and audits securely.</p>
+    <form method="post" action="{% url 'login' %}">
+      {% csrf_token %}
+      <div class="form-grid">
+        <label>
+          Email
+          <input type="email" name="email" required>
+        </label>
+        <label>
+          Password
+          <input type="password" name="password" required>
+        </label>
+      </div>
+      <div class="auth-actions">
+        <button class="btn primary" type="submit">Sign In</button>
+      </div>
+    </form>
+  </div>
+{% endblock %}

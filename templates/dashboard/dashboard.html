@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard | AssetFlow{% endblock %}
+{% block content %}
+  <div class="card">
+    <h2>Welcome back, {{ user.get_full_name|default:user.email }}</h2>
+    <p class="muted">Role: {{ user.role }}</p>
+  </div>
+
+  <div class="stats">
+    {% for key, value in dashboard.items %}
+      <div class="stat-card">
+        <h3>{{ key|title }}</h3>
+        <div class="value">{{ value }}</div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Recent Activity</h3>
+      <p>Use the activity log module to review actions taken by your team.</p>
+    </div>
+    <div class="card">
+      <h3>System Health</h3>
+      <p>Assets, employees, departments, and audits are available from the sidebar.</p>
+    </div>
+  </div>
+{% endblock %}

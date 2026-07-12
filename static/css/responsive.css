@@ -1,0 +1,7 @@
+.mobile-only { display: none; }
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .topbar { padding: 0 16px; }
+  .topbar-search { display: none; }
+  .mobile-only { display: inline-block; }
+}

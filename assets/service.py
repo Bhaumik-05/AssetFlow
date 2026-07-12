@@ -2298,9 +2298,6 @@ from assets.models import (
     AssetTransfer
 )
 
-from .allocation_service import AllocationService
-
-
 class TransferService:
 
     # =====================================================

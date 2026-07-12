@@ -1,4 +1,4 @@
-from django.core.exceptions import ValidationError
+﻿from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 
 from rest_framework import status
@@ -7,7 +7,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from accounts.models import Employee
-
 from assets.models import (
     Asset,
     AssetAllocation,
@@ -16,8 +15,7 @@ from assets.models import (
     MaintenanceRequest,
     ResourceBooking,
 )
-
-from assets.serializers import (
+from assets.serializer import (
     AllocationCreateSerializer,
     AssetAllocationSerializer,
     AssetCategorySerializer,
@@ -31,29 +29,19 @@ from assets.serializers import (
     ResourceBookingSerializer,
     TransferRequestSerializer,
 )
-
-from assets.services import (
+from assets.service import (
     AllocationService,
     AssetService,
     BookingService,
     MaintenanceService,
     TransferService,
 )
-class BaseAPIView(GenericAPIView):
 
+
+class BaseAPIView(GenericAPIView):
     permission_classes = [IsAuthenticated]
 
-    # ===========================================
-    # Success Response
-    # ===========================================
-
-    def success(
-        self,
-        message,
-        data=None,
-        status_code=status.HTTP_200_OK,
-    ):
-
+    def success(self, message, data=None, status_code=status.HTTP_200_OK):
         return Response(
             {
                 "success": True,
@@ -63,17 +51,7 @@ class BaseAPIView(GenericAPIView):
             status=status_code,
         )
 
-    # ===========================================
-    # Error Response
-    # ===========================================
-
-    def error(
-        self,
-        message,
-        errors=None,
-        status_code=status.HTTP_400_BAD_REQUEST,
-    ):
-
+    def error(self, message, errors=None, status_code=status.HTTP_400_BAD_REQUEST):
         return Response(
             {
                 "success": False,
@@ -83,152 +61,63 @@ class BaseAPIView(GenericAPIView):
             status=status_code,
         )
 
-    # ===========================================
-    # Centralized Exception Handler
-    # ===========================================
-
     def execute(self, callback):
-
         try:
-
             return callback()
-
         except ValidationError as exc:
-
             return self.error(
                 message="Validation failed.",
-                errors=getattr(
-                    exc,
-                    "message_dict",
-                    str(exc),
-                ),
+                errors=getattr(exc, "message_dict", str(exc)),
             )
-
         except Exception as exc:
-
             return self.error(
                 message="Internal server error.",
                 errors=str(exc),
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    # ===========================================
-    # Object Fetch Helper
-    # ===========================================
-
-    def get_instance(
-        self,
-        model,
-        pk,
-        queryset=None,
-    ):
-
+    def get_instance(self, model, pk, queryset=None):
         queryset = queryset or model.objects.all()
+        return get_object_or_404(queryset, pk=pk)
 
-        return get_object_or_404(
-            queryset,
-            pk=pk,
-        )
-    class AssetCategoryAPIView(BaseAPIView):
 
+class AssetCategoryAPIView(BaseAPIView):
     serializer_class = AssetCategorySerializer
 
     def get(self, request):
-
         queryset = AssetCategory.objects.all()
-
-        serializer = self.get_serializer(
-            queryset,
-            many=True,
-        )
-
-        return self.success(
-            "Categories fetched successfully.",
-            serializer.data,
-        )
+        serializer = self.get_serializer(queryset, many=True)
+        return self.success("Categories fetched successfully.", serializer.data)
 
     def post(self, request):
-
-        serializer = self.get_serializer(
-            data=request.data,
-        )
-
-        serializer.is_valid(
-            raise_exception=True,
-        )
-
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         category = serializer.save()
-
         return self.success(
             "Category created successfully.",
             AssetCategorySerializer(category).data,
             status.HTTP_201_CREATED,
         )
-    class AssetAPIView(BaseAPIView):
 
-    # ===========================================
-    # List / Retrieve
-    # ===========================================
 
-    def get(
-        self,
-        request,
-        pk=None,
-    ):
-
-        queryset = Asset.objects.select_related(
-            "category",
-            "department",
-        )
+class AssetAPIView(BaseAPIView):
+    def get(self, request, pk=None):
+        queryset = Asset.objects.select_related("category", "department")
 
         if pk:
-
-            asset = self.get_instance(
-                Asset,
-                pk,
-                queryset,
-            )
-
+            asset = self.get_instance(Asset, pk, queryset)
             serializer = AssetSerializer(asset)
+            return self.success("Asset fetched successfully.", serializer.data)
 
-            return self.success(
-                "Asset fetched successfully.",
-                serializer.data,
-            )
+        serializer = AssetSerializer(queryset, many=True)
+        return self.success("Assets fetched successfully.", serializer.data)
 
-        serializer = AssetSerializer(
-            queryset,
-            many=True,
-        )
-
-        return self.success(
-            "Assets fetched successfully.",
-            serializer.data,
-        )
-
-    # ===========================================
-    # Create
-    # ===========================================
-
-    def post(
-        self,
-        request,
-    ):
-
-        serializer = AssetCreateSerializer(
-            data=request.data,
-        )
-
-        serializer.is_valid(
-            raise_exception=True,
-        )
+    def post(self, request):
+        serializer = AssetCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
         def operation():
-
-            asset = AssetService.create_asset(
-                **serializer.validated_data
-            )
-
+            asset = AssetService.create_asset(**serializer.validated_data)
             return self.success(
                 "Asset created successfully.",
                 AssetSerializer(asset).data,
@@ -237,37 +126,13 @@ class BaseAPIView(GenericAPIView):
 
         return self.execute(operation)
 
-    # ===========================================
-    # Update
-    # ===========================================
-
-    def put(
-        self,
-        request,
-        pk,
-    ):
-
-        asset = self.get_instance(
-            Asset,
-            pk,
-        )
-
-        serializer = AssetUpdateSerializer(
-            asset,
-            data=request.data,
-        )
-
-        serializer.is_valid(
-            raise_exception=True,
-        )
+    def put(self, request, pk):
+        asset = self.get_instance(Asset, pk)
+        serializer = AssetUpdateSerializer(asset, data=request.data)
+        serializer.is_valid(raise_exception=True)
 
         def operation():
-
-            updated_asset = AssetService.update_asset(
-                asset=asset,
-                **serializer.validated_data,
-            )
-
+            updated_asset = AssetService.update_asset(asset=asset, **serializer.validated_data)
             return self.success(
                 "Asset updated successfully.",
                 AssetSerializer(updated_asset).data,
@@ -275,208 +140,83 @@ class BaseAPIView(GenericAPIView):
 
         return self.execute(operation)
 
-    # ===========================================
-    # Delete
-    # ===========================================
-
-    def delete(
-        self,
-        request,
-        pk,
-    ):
-
-        asset = self.get_instance(
-            Asset,
-            pk,
-        )
-
+    def delete(self, request, pk):
+        asset = self.get_instance(Asset, pk)
         asset.delete()
+        return self.success("Asset deleted successfully.")
 
-        return self.success(
-            "Asset deleted successfully.",
-        )
-    # ==========================================================
-# Allocation APIs
-# ==========================================================
 
 class AllocationAPIView(BaseAPIView):
-
-    # ===========================================
-    # List / Retrieve
-    # ===========================================
-
-    def get(
-        self,
-        request,
-        pk=None,
-    ):
-
+    def get(self, request, pk=None):
         queryset = (
-            AssetAllocation.objects
-            .select_related(
+            AssetAllocation.objects.select_related(
                 "asset",
                 "employee",
                 "department",
                 "allocated_by",
-            )
-            .order_by("-allocated_on")
+            ).order_by("-allocated_on")
         )
 
         if pk:
+            allocation = self.get_instance(AssetAllocation, pk, queryset)
+            serializer = AssetAllocationSerializer(allocation)
+            return self.success("Allocation fetched successfully.", serializer.data)
 
-            allocation = self.get_instance(
-                AssetAllocation,
-                pk,
-                queryset,
-            )
+        serializer = AssetAllocationSerializer(queryset, many=True)
+        return self.success("Allocation history fetched successfully.", serializer.data)
 
-            serializer = AssetAllocationSerializer(
-                allocation
-            )
-
-            return self.success(
-                "Allocation fetched successfully.",
-                serializer.data,
-            )
-
-        serializer = AssetAllocationSerializer(
-            queryset,
-            many=True,
-        )
-
-        return self.success(
-            "Allocation history fetched successfully.",
-            serializer.data,
-        )
-
-    # ===========================================
-    # Allocate Asset
-    # ===========================================
-
-    def post(
-        self,
-        request,
-    ):
-
-        serializer = AllocationCreateSerializer(
-            data=request.data,
-        )
-
-        serializer.is_valid(
-            raise_exception=True,
-        )
+    def post(self, request):
+        serializer = AllocationCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
         def operation():
-
-            allocation = (
-                AllocationService.allocate_asset(
-                    **serializer.validated_data
-                )
-            )
-
+            allocation = AllocationService.allocate_asset(**serializer.validated_data)
             return self.success(
                 "Asset allocated successfully.",
-                AssetAllocationSerializer(
-                    allocation
-                ).data,
+                AssetAllocationSerializer(allocation).data,
                 status.HTTP_201_CREATED,
             )
 
         return self.execute(operation)
 
-    # ===========================================
-    # Return Asset
-    # ===========================================
-
-    def put(
-        self,
-        request,
-        pk,
-    ):
-
-        allocation = self.get_instance(
-            AssetAllocation,
-            pk,
-        )
+    def put(self, request, pk):
+        allocation = self.get_instance(AssetAllocation, pk)
 
         def operation():
-
             AllocationService.return_asset(
                 asset=allocation.asset,
-                returned_on=request.data.get(
-                    "returned_on"
-                ),
-                remarks=request.data.get(
-                    "remarks",
-                    "",
-                ),
+                returned_on=request.data.get("returned_on"),
+                remarks=request.data.get("remarks", ""),
             )
-
             allocation.refresh_from_db()
-
             return self.success(
                 "Asset returned successfully.",
-                AssetAllocationSerializer(
-                    allocation
-                ).data,
+                AssetAllocationSerializer(allocation).data,
             )
 
         return self.execute(operation)
 
-    # ===========================================
-    # Cancel Allocation
-    # ===========================================
-
-    def delete(
-        self,
-        request,
-        pk,
-    ):
-
-        allocation = self.get_instance(
-            AssetAllocation,
-            pk,
-        )
+    def delete(self, request, pk):
+        allocation = self.get_instance(AssetAllocation, pk)
 
         def operation():
-
             AllocationService.cancel_allocation(
                 allocation=allocation,
-                remarks=request.data.get(
-                    "remarks",
-                    "",
-                ),
+                remarks=request.data.get("remarks", ""),
             )
-
             allocation.refresh_from_db()
-
             return self.success(
                 "Allocation cancelled successfully.",
-                AssetAllocationSerializer(
-                    allocation
-                ).data,
+                AssetAllocationSerializer(allocation).data,
             )
 
         return self.execute(operation)
-    # ==========================================================
-# Transfer APIs
-# ==========================================================
+
 
 class TransferAPIView(BaseAPIView):
-
-    # ===========================================
-    # List / Retrieve
-    # ===========================================
-
-    def get(
-        self,
-        request,
-        pk=None,
-    ):
-
+    def get(self, request, pk=None):
         queryset = (
-            AssetTransfer.objects
-            .select_related(
+            AssetTransfer.objects.select_related(
                 "asset",
                 "from_department",
                 "to_department",
@@ -484,563 +224,212 @@ class TransferAPIView(BaseAPIView):
                 "to_employee",
                 "requested_by",
                 "approved_by",
-            )
-            .order_by("-request_date")
+            ).order_by("-request_date")
         )
 
         if pk:
+            transfer = self.get_instance(AssetTransfer, pk, queryset)
+            serializer = AssetTransferSerializer(transfer)
+            return self.success("Transfer fetched successfully.", serializer.data)
 
-            transfer = self.get_instance(
-                AssetTransfer,
-                pk,
-                queryset,
-            )
+        serializer = AssetTransferSerializer(queryset, many=True)
+        return self.success("Transfer history fetched successfully.", serializer.data)
 
-            serializer = AssetTransferSerializer(
-                transfer
-            )
-
-            return self.success(
-                "Transfer fetched successfully.",
-                serializer.data,
-            )
-
-        serializer = AssetTransferSerializer(
-            queryset,
-            many=True,
-        )
-
-        return self.success(
-            "Transfer history fetched successfully.",
-            serializer.data,
-        )
-
-    # ===========================================
-    # Request Transfer
-    # ===========================================
-
-    def post(
-        self,
-        request,
-    ):
-
-        serializer = TransferRequestSerializer(
-            data=request.data,
-        )
-
-        serializer.is_valid(
-            raise_exception=True,
-        )
+    def post(self, request):
+        serializer = TransferRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
         def operation():
-
-            transfer = (
-                TransferService.request_transfer(
-                    requested_by=request.user,
-                    **serializer.validated_data,
-                )
-            )
-
+            transfer = TransferService.request_transfer(requested_by=request.user, **serializer.validated_data)
             return self.success(
                 "Transfer request created successfully.",
-                AssetTransferSerializer(
-                    transfer
-                ).data,
+                AssetTransferSerializer(transfer).data,
                 status.HTTP_201_CREATED,
             )
 
         return self.execute(operation)
 
-    # ===========================================
-    # Approve Transfer
-    # ===========================================
-
-    def put(
-        self,
-        request,
-        pk,
-    ):
-
-        transfer = self.get_instance(
-            AssetTransfer,
-            pk,
-        )
+    def put(self, request, pk):
+        transfer = self.get_instance(AssetTransfer, pk)
 
         def operation():
-
-            TransferService.approve_transfer(
-                transfer=transfer,
-                approved_by=request.user,
-            )
-
+            TransferService.approve_transfer(transfer=transfer, approved_by=request.user)
             transfer.refresh_from_db()
-
             return self.success(
                 "Transfer approved successfully.",
-                AssetTransferSerializer(
-                    transfer
-                ).data,
+                AssetTransferSerializer(transfer).data,
             )
 
         return self.execute(operation)
 
-    # ===========================================
-    # Reject Transfer
-    # ===========================================
-
-    def patch(
-        self,
-        request,
-        pk,
-    ):
-
-        transfer = self.get_instance(
-            AssetTransfer,
-            pk,
-        )
+    def patch(self, request, pk):
+        transfer = self.get_instance(AssetTransfer, pk)
 
         def operation():
-
             TransferService.reject_transfer(
                 transfer=transfer,
                 approved_by=request.user,
-                reason=request.data.get(
-                    "reason",
-                    "",
-                ),
+                reason=request.data.get("reason", ""),
             )
-
             transfer.refresh_from_db()
-
             return self.success(
                 "Transfer rejected successfully.",
-                AssetTransferSerializer(
-                    transfer
-                ).data,
+                AssetTransferSerializer(transfer).data,
             )
 
         return self.execute(operation)
 
-    # ===========================================
-    # Complete Transfer
-    # ===========================================
-
-    def delete(
-        self,
-        request,
-        pk,
-    ):
-
-        transfer = self.get_instance(
-            AssetTransfer,
-            pk,
-        )
+    def delete(self, request, pk):
+        transfer = self.get_instance(AssetTransfer, pk)
 
         def operation():
-
-            allocation = (
-                TransferService.complete_transfer(
-                    transfer=transfer,
-                )
-            )
-
+            allocation = TransferService.complete_transfer(transfer=transfer)
             transfer.refresh_from_db()
-
             return self.success(
                 "Transfer completed successfully.",
                 {
-                    "transfer": AssetTransferSerializer(
-                        transfer
-                    ).data,
-                    "allocation": AssetAllocationSerializer(
-                        allocation
-                    ).data,
+                    "transfer": AssetTransferSerializer(transfer).data,
+                    "allocation": AssetAllocationSerializer(allocation).data,
                 },
             )
 
         return self.execute(operation)
-    # ==========================================================
-# Booking APIs
-# ==========================================================
+
 
 class BookingAPIView(BaseAPIView):
-
-    # ===========================================
-    # List / Retrieve
-    # ===========================================
-
-    def get(
-        self,
-        request,
-        pk=None,
-    ):
-
-        queryset = (
-            ResourceBooking.objects
-            .select_related(
-                "asset",
-                "employee",
-            )
-            .order_by("-created_at")
-        )
+    def get(self, request, pk=None):
+        queryset = ResourceBooking.objects.select_related("asset", "employee").order_by("-created_at")
 
         if pk:
+            booking = self.get_instance(ResourceBooking, pk, queryset)
+            serializer = ResourceBookingSerializer(booking)
+            return self.success("Booking fetched successfully.", serializer.data)
 
-            booking = self.get_instance(
-                ResourceBooking,
-                pk,
-                queryset,
-            )
+        serializer = ResourceBookingSerializer(queryset, many=True)
+        return self.success("Bookings fetched successfully.", serializer.data)
 
-            serializer = ResourceBookingSerializer(
-                booking
-            )
-
-            return self.success(
-                "Booking fetched successfully.",
-                serializer.data,
-            )
-
-        serializer = ResourceBookingSerializer(
-            queryset,
-            many=True,
-        )
-
-        return self.success(
-            "Bookings fetched successfully.",
-            serializer.data,
-        )
-
-    # ===========================================
-    # Create Booking
-    # ===========================================
-
-    def post(
-        self,
-        request,
-    ):
-
-        serializer = BookingCreateSerializer(
-            data=request.data,
-        )
-
-        serializer.is_valid(
-            raise_exception=True,
-        )
+    def post(self, request):
+        serializer = BookingCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
         def operation():
-
-            booking = (
-                BookingService.create_booking(
-                    **serializer.validated_data,
-                )
-            )
-
+            booking = BookingService.create_booking(**serializer.validated_data)
             return self.success(
                 "Booking created successfully.",
-                ResourceBookingSerializer(
-                    booking
-                ).data,
+                ResourceBookingSerializer(booking).data,
                 status.HTTP_201_CREATED,
             )
 
         return self.execute(operation)
 
-    # ===========================================
-    # Approve Booking
-    # ===========================================
-
-    def put(
-        self,
-        request,
-        pk,
-    ):
-
-        booking = self.get_instance(
-            ResourceBooking,
-            pk,
-        )
+    def put(self, request, pk):
+        booking = self.get_instance(ResourceBooking, pk)
 
         def operation():
-
-            BookingService.approve_booking(
-                booking=booking,
-                approved_by=request.user,
-            )
-
+            BookingService.approve_booking(booking=booking, approved_by=request.user)
             booking.refresh_from_db()
-
             return self.success(
                 "Booking approved successfully.",
-                ResourceBookingSerializer(
-                    booking
-                ).data,
+                ResourceBookingSerializer(booking).data,
             )
 
         return self.execute(operation)
 
-    # ===========================================
-    # Cancel Booking
-    # ===========================================
-
-    def patch(
-        self,
-        request,
-        pk,
-    ):
-
-        booking = self.get_instance(
-            ResourceBooking,
-            pk,
-        )
+    def patch(self, request, pk):
+        booking = self.get_instance(ResourceBooking, pk)
 
         def operation():
-
             BookingService.cancel_booking(
                 booking=booking,
                 cancelled_by=request.user,
-                reason=request.data.get(
-                    "reason",
-                    "",
-                ),
+                reason=request.data.get("reason", ""),
             )
-
             booking.refresh_from_db()
-
             return self.success(
                 "Booking cancelled successfully.",
-                ResourceBookingSerializer(
-                    booking
-                ).data,
+                ResourceBookingSerializer(booking).data,
             )
 
         return self.execute(operation)
 
-    # ===========================================
-    # Complete Booking
-    # ===========================================
-
-    def delete(
-        self,
-        request,
-        pk,
-    ):
-
-        booking = self.get_instance(
-            ResourceBooking,
-            pk,
-        )
+    def delete(self, request, pk):
+        booking = self.get_instance(ResourceBooking, pk)
 
         def operation():
-
-            BookingService.complete_booking(
-                booking=booking,
-            )
-
+            BookingService.complete_booking(booking=booking)
             booking.refresh_from_db()
-
             return self.success(
                 "Booking completed successfully.",
-                ResourceBookingSerializer(
-                    booking
-                ).data,
+                ResourceBookingSerializer(booking).data,
             )
 
         return self.execute(operation)
-    # ==========================================================
-# Maintenance APIs
-# ==========================================================
+
 
 class MaintenanceAPIView(BaseAPIView):
-
-    # ===========================================
-    # List / Retrieve
-    # ===========================================
-
-    def get(
-        self,
-        request,
-        pk=None,
-    ):
-
+    def get(self, request, pk=None):
         queryset = (
-            MaintenanceRequest.objects
-            .select_related(
-                "asset",
-                "reported_by",
-                "assigned_to",
-            )
-            .order_by("-reported_on")
+            MaintenanceRequest.objects.select_related("asset", "reported_by", "assigned_to").order_by("-reported_on")
         )
 
         if pk:
+            maintenance = self.get_instance(MaintenanceRequest, pk, queryset)
+            serializer = MaintenanceRequestSerializer(maintenance)
+            return self.success("Maintenance request fetched successfully.", serializer.data)
 
-            maintenance = self.get_instance(
-                MaintenanceRequest,
-                pk,
-                queryset,
-            )
+        serializer = MaintenanceRequestSerializer(queryset, many=True)
+        return self.success("Maintenance requests fetched successfully.", serializer.data)
 
-            serializer = MaintenanceRequestSerializer(
-                maintenance
-            )
-
-            return self.success(
-                "Maintenance request fetched successfully.",
-                serializer.data,
-            )
-
-        serializer = MaintenanceRequestSerializer(
-            queryset,
-            many=True,
-        )
-
-        return self.success(
-            "Maintenance requests fetched successfully.",
-            serializer.data,
-        )
-
-    # ===========================================
-    # Create Request
-    # ===========================================
-
-    def post(
-        self,
-        request,
-    ):
-
-        serializer = MaintenanceCreateSerializer(
-            data=request.data,
-        )
-
-        serializer.is_valid(
-            raise_exception=True,
-        )
+    def post(self, request):
+        serializer = MaintenanceCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
         def operation():
-
-            maintenance = (
-                MaintenanceService.create_request(
-                    reported_by=request.user,
-                    **serializer.validated_data,
-                )
-            )
-
+            maintenance = MaintenanceService.create_request(reported_by=request.user, **serializer.validated_data)
             return self.success(
                 "Maintenance request created successfully.",
-                MaintenanceRequestSerializer(
-                    maintenance
-                ).data,
+                MaintenanceRequestSerializer(maintenance).data,
                 status.HTTP_201_CREATED,
             )
 
         return self.execute(operation)
 
-    # ===========================================
-    # Approve Request
-    # ===========================================
-
-    def put(
-        self,
-        request,
-        pk,
-    ):
-
-        maintenance = self.get_instance(
-            MaintenanceRequest,
-            pk,
-        )
+    def put(self, request, pk):
+        maintenance = self.get_instance(MaintenanceRequest, pk)
 
         def operation():
-
-            MaintenanceService.approve_request(
-                request=maintenance,
-                approved_by=request.user,
-            )
-
+            MaintenanceService.approve_request(request=maintenance, approved_by=request.user)
             maintenance.refresh_from_db()
-
             return self.success(
                 "Maintenance request approved successfully.",
-                MaintenanceRequestSerializer(
-                    maintenance
-                ).data,
+                MaintenanceRequestSerializer(maintenance).data,
             )
 
         return self.execute(operation)
 
-    # ===========================================
-    # Assign Engineer
-    # ===========================================
-
-    def patch(
-        self,
-        request,
-        pk,
-    ):
-
-        maintenance = self.get_instance(
-            MaintenanceRequest,
-            pk,
-        )
-
-        employee = self.get_instance(
-            Employee,
-            request.data.get(
-                "employee_id"
-            ),
-        )
+    def patch(self, request, pk):
+        maintenance = self.get_instance(MaintenanceRequest, pk)
+        employee = self.get_instance(Employee, request.data.get("employee_id"))
 
         def operation():
-
-            MaintenanceService.assign_employee(
-                request=maintenance,
-                employee=employee,
-            )
-
+            MaintenanceService.assign_employee(request=maintenance, employee=employee)
             maintenance.refresh_from_db()
-
             return self.success(
                 "Maintenance assigned successfully.",
-                MaintenanceRequestSerializer(
-                    maintenance
-                ).data,
+                MaintenanceRequestSerializer(maintenance).data,
             )
 
         return self.execute(operation)
 
-    # ===========================================
-    # Resolve Request
-    # ===========================================
-
-    def delete(
-        self,
-        request,
-        pk,
-    ):
-
-        maintenance = self.get_instance(
-            MaintenanceRequest,
-            pk,
-        )
+    def delete(self, request, pk):
+        maintenance = self.get_instance(MaintenanceRequest, pk)
 
         def operation():
-
-            MaintenanceService.resolve_request(
-                request=maintenance,
-                remarks=request.data.get(
-                    "remarks",
-                    "",
-                ),
-            )
-
+            MaintenanceService.resolve_request(request=maintenance, remarks=request.data.get("remarks", ""))
             maintenance.refresh_from_db()
-
             return self.success(
                 "Maintenance resolved successfully.",
-                MaintenanceRequestSerializer(
-                    maintenance
-                ).data,
+                MaintenanceRequestSerializer(maintenance).data,
             )
 
         return self.execute(operation)

@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Employees | AssetFlow{% endblock %}
+{% block content %}
+  <div class="card">
+    <div class="flex-row" style="display:flex;justify-content:space-between;align-items:center;">
+      <h2>Employees</h2>
+      <a class="btn primary" href="#">New Employee</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Employee ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Department</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for employee in employees %}
+            <tr>
+              <td>{{ employee.employee_id }}</td>
+              <td>{{ employee.first_name }} {{ employee.last_name }}</td>
+              <td>{{ employee.email }}</td>
+              <td>{{ employee.role }}</td>
+              <td>{{ employee.department_name|default:'-' }}</td>
+              <td>
+                {% if employee.is_active %}
+                  <span class="badge success">Active</span>
+                {% else %}
+                  <span class="badge danger">Inactive</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6">No employees found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

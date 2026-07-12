@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Maintenance | AssetFlow{% endblock %}
+{% block content %}
+  <div class="card">
+    <h2>Maintenance Requests</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Asset</th>
+            <th>Reported By</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Assigned To</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for maintenance in maintenance_requests %}
+            <tr>
+              <td>{{ maintenance.asset.asset_code }}</td>
+              <td>{{ maintenance.reported_by }}</td>
+              <td>{{ maintenance.priority }}</td>
+              <td><span class="badge warning">{{ maintenance.status }}</span></td>
+              <td>{{ maintenance.assigned_to|default:'-' }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5">No maintenance requests found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

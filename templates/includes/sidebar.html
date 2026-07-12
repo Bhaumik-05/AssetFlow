@@ -1,0 +1,41 @@
+{% load static %}
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <div class="brand-mark">AF</div>
+    <div>
+      <h1>AssetFlow</h1>
+      <p>Enterprise Asset Manager</p>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a class="nav-link" href="{% url 'dashboard' %}">
+      <span>◉</span><span>Dashboard</span>
+    </a>
+
+    {% if user.is_authenticated %}
+      {% if user.role == 'ADMIN' or user.role == 'ASSET_MANAGER' %}
+        <a class="nav-link" href="{% url 'employees' %}"><span>◉</span><span>Employees</span></a>
+        <a class="nav-link" href="{% url 'departments' %}"><span>◉</span><span>Departments</span></a>
+      {% endif %}
+
+      {% if user.role == 'ADMIN' or user.role == 'ASSET_MANAGER' or user.role == 'HOD' %}
+        <a class="nav-link" href="{% url 'assets' %}"><span>◉</span><span>Assets</span></a>
+        <a class="nav-link" href="{% url 'categories' %}"><span>◉</span><span>Categories</span></a>
+        <a class="nav-link" href="{% url 'allocations' %}"><span>◉</span><span>Allocations</span></a>
+        <a class="nav-link" href="{% url 'transfers' %}"><span>◉</span><span>Transfers</span></a>
+        <a class="nav-link" href="{% url 'maintenance' %}"><span>◉</span><span>Maintenance</span></a>
+        <a class="nav-link" href="{% url 'bookings' %}"><span>◉</span><span>Bookings</span></a>
+      {% endif %}
+
+      {% if user.role == 'ADMIN' or user.role == 'ASSET_MANAGER' or user.role == 'HOD' %}
+        <a class="nav-link" href="{% url 'audit_cycles' %}"><span>◉</span><span>Audit Cycles</span></a>
+        <a class="nav-link" href="{% url 'audit_records' %}"><span>◉</span><span>Audit Records</span></a>
+      {% endif %}
+
+      <a class="nav-link" href="{% url 'notifications' %}"><span>◉</span><span>Notifications</span></a>
+      <a class="nav-link" href="{% url 'activity_logs' %}"><span>◉</span><span>Activity Logs</span></a>
+      <a class="nav-link" href="{% url 'reports' %}"><span>◉</span><span>Reports</span></a>
+    {% endif %}
+  </nav>
+</aside>

@@ -10,8 +10,14 @@ def notify_asset_allocation(sender, instance, created, **kwargs):
 
     if created and instance.employee:
 
+        asset_code = (
+            instance.asset.asset_code
+            if instance.asset
+            else "Asset"
+        )
+
         create_notification(
             employee=instance.employee,
             title="Asset Allocated",
-            message=f"{instance.asset.asset_code} has been allocated to you."
+            message=f"{asset_code} has been allocated to you."
         )

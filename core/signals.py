@@ -2,7 +2,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from assets.models import AssetAllocation
-from .services import create_notification
+from .service import create_notification
 
 
 @receiver(post_save, sender=AssetAllocation)

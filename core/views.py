@@ -68,3 +68,8 @@ class ActivityLogViewSet(
         .select_related("employee")
         .order_by("-timestamp")
     )
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializers import CustomTokenObtainPairSerializer
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer

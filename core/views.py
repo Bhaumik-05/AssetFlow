@@ -73,3 +73,33 @@ from .serializers import CustomTokenObtainPairSerializer
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+
+from rest_framework.views import APIView
+
+from .dashboard_service import DashboardService
+
+class DashboardAPIView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+
+        user = request.user
+
+        if user.role == user.Role.ADMIN:
+
+            data = DashboardService.admin_dashboard()
+
+        elif user.role == user.Role.ASSET_MANAGER:
+
+            data = DashboardService.asset_manager_dashboard()
+
+        elif user.role == user.Role.HOD:
+
+            data = DashboardService.hod_dashboard(user)
+
+        else:
+
+            data = DashboardService.employee_dashboard(user)
+
+        return Response(data)

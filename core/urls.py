@@ -6,7 +6,7 @@ from rest_framework_simplejwt.views import (
 )
 
 from .views import CustomTokenObtainPairView
-
+from .views import DashboardAPIView
 
 urlpatterns = [
 
@@ -26,5 +26,11 @@ urlpatterns = [
         "logout/",
         TokenBlacklistView.as_view(),
         name="logout",
+    ),
+
+    path(
+        "dashboard/",
+        DashboardAPIView.as_view(),
+        name="dashboard",
     ),
 ]
